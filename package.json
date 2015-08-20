@@ -1,0 +1,14 @@
+{
+  "name": "expressapp",
+  "version": "1.0.0",
+  "description": "Express App gets POSTS and executes shall script",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "nixialexandru",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.3"
+  }
+}
