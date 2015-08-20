@@ -9,6 +9,8 @@
   "author": "nixialexandru",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.13.3"
+    "express": "^4.13.3",
+    "kue": "^0.9.4",
+    "nedb": "^1.1.3"
   }
 }

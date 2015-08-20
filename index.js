@@ -1,22 +1,51 @@
 var express = require('express');
 var app =  express();
 
+// HTTP Server
+
+app.get('/', function(req, res){
+
+});
+
+var HTTPserver = app.listen(3000, function () {
+  console.log('Example app running.');
+});
+
+
+
+// TCP Server
+
+var net = require('net');
 var util  = require('util');
 var spwan = require('child_process').spawn;
 
-app.get('/:a/:b', function(req, res){
+// Creates a basic datastore
+var Datastore = require('nedb')
+	, db = new Datastore({filename:'database.db', autoload: true})
 
-	var script = spwan('./script.sh', [req.params.a, req.params.b]);
-	script.stdout.on('data', function (data) {    
-	  res.send("Result: " + data);
+// Creates a TCP server that will accept Socket connections from the 
+// Python script
+net.createServer(function(socket){ 
+	
+	// Function to execute when python sends data over the socket
+	socket.on('data', function(data){
+		
+		// Arguments are sent as a single string so I have to process it
+		var args = data.toString('ascii').split(' ');
+
+		// Execute a shell script that uses these arguments
+		var script = spwan('./script.sh', [args[0], args[1]]);
+		// When the script outputs the result I get 
+		script.stdout.on('data', function (data) {
+			// Result is written back to the python script    
+			socket.write(data.toString('ascii'));
+			socket.destroy();
+
+			// Result is also stored in a databse
+			db.insert({'First argument': args[0], 'Second argument': args[1], 'Result': data.toString('ascii')});
+
+		});
+
 	});
 
-});
-
-var server = app.listen(3000, function () {
-  var host = server.address().address;
-  var port = server.address().port;
-
-  console.log('Example app listening at http://%s:%s', host, port);
-});
-
+}).listen(9000, "localhost");
