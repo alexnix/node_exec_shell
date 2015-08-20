@@ -18,6 +18,7 @@ var HTTPserver = app.listen(3000, function () {
 var net = require('net');
 var util  = require('util');
 var spwan = require('child_process').spawn;
+var exec = require('child_process').exec;
 
 // Creates a basic datastore
 var Datastore = require('nedb')
@@ -33,17 +34,9 @@ net.createServer(function(socket){
 		// Arguments are sent as a single string so I have to process it
 		var args = data.toString('ascii').split(' ');
 
-		// Execute a shell script that uses these arguments
-		var script = spwan('./script.sh', [args[0], args[1]]);
-		// When the script outputs the result I get 
-		script.stdout.on('data', function (data) {
-			// Result is written back to the python script    
-			socket.write(data.toString('ascii'));
+		exec("./script.sh " + data.toString('ascii'), function(err, stdout, stderr){
+			socket.write(stdout);
 			socket.destroy();
-
-			// Result is also stored in a databse
-			db.insert({'First argument': args[0], 'Second argument': args[1], 'Result': data.toString('ascii')});
-
 		});
 
 	});
