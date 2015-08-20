@@ -11,6 +11,6 @@ s.send("4 9");
 # Receives result from node.js server
 data = s.recv(1024)
 
-print "result ", data
+print "result code: ", data
 
 s.close();

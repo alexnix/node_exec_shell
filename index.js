@@ -34,9 +34,15 @@ net.createServer(function(socket){
 		// Arguments are sent as a single string so I have to process it
 		var args = data.toString('ascii').split(' ');
 
-		exec("./script.sh " + data.toString('ascii'), function(err, stdout, stderr){
-			socket.write(stdout);
-			socket.destroy();
+		// exec("./script.sh " + data.toString('ascii'), function(err, stdout, stderr){
+		// 	socket.write(stdout);
+		// 	socket.destroy();
+		// });
+
+		var child = exec("./script.sh " + data.toString('ascii'));
+		child.on('close', function(code) {
+		    socket.write(code+'');
+		    socket.destroy();
 		});
 
 	});
