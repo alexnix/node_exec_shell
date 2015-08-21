@@ -17,12 +17,39 @@ i.fa.fa-check {
 body {
 	background-color: #efefef;
 }
-div.table-wrapper {
+div.search-widget, div.manual-transaction, div.table-wrapper {
 	background-color: white;
 	padding: 20px;
 	width: 900px;
 	margin: auto;
-	margin-top: 50px;
+	margin-top: 30px;
+}
+
+div.manual-transaction input, div.manual-transaction button {
+	width: 100%;
+	margin-bottom: 0px;
+}
+
+input[type=text], input[type=date], input[type=number], select {
+	width: 100%;
+	padding: 4px;
+	margin-bottom: 20px;
+	background-color: transparent;
+	border: 1px solid #dfdfdf;
+	height: 35px;
+	border-radius: 5px;
+}
+
+div.buttons {
+	margin-top: 23px;
+}
+div.buttons button {
+	height: 35px;
+}
+
+
+div.manual-transaction input {
+	padding: 4px;
 }
 
 thead tr td {

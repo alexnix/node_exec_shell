@@ -1,5 +1,4 @@
 // HTTP Server
-
 var express = require('express');
 var app =  express();
 var http = require('http').Server(app);
@@ -18,9 +17,27 @@ app.get('/api/transactions', function(req, res){
 	});
 });
 
+app.post('/api/manualUSSD/:f/:s', function(req, res){
+	var child = exec("./script.sh " + req.params.f + " " + req.params.s);
+	child.on('close', function(code) {
+
+	    var transaction = {
+	    	'First_Argument': req.params.f,
+	    	'Second_Argument': parseFloat(req.params.s),
+	    	'Date': new Date().getTime(),
+	    	'Status': code + '',
+	    };
+
+	    io.emit('transaction', transaction);
+	    db.insert(transaction);
+
+	});
+});
+
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
+
 
 
 
@@ -57,7 +74,7 @@ net.createServer(function(socket){
 
 		    var transaction = {
 		    	'First_Argument': args[0],
-		    	'Second_Argument': args[1],
+		    	'Second_Argument': parseFloat(args[1]),
 		    	'Date': new Date().getTime(),
 		    	'Status': code + '',
 		    };

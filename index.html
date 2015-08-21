@@ -39,7 +39,7 @@
 		  };
 		});
 
-		app.controller('TabelCtrl', ['$scope', '$http', 'socket', function($scope, $http, socket){
+		app.controller('TabelCtrl', ['$scope', '$http', 'socket', '$rootScope', function($scope, $http, socket, $rootScope){
 
 			socket.on('transaction', function(d){
 				if ($scope.transactions){
@@ -61,11 +61,142 @@
 			$http.get('/api/transactions').then(function(res){
 				$scope.transactions = res.data;
 			});
+
+
+			$scope.filterFunc = function(value, index, array){
+				if( $rootScope.filter.min_date && new Date(value.Date).setHours(0,0,0,0) < new Date($rootScope.filter.min_date).setHours(0,0,0,0) ){
+					console.log(1);
+					return false
+				}
+
+				if( $rootScope.filter.max_date && new Date(value.Date).setHours(0,0,0,0) > new Date($rootScope.filter.max_date).setHours(0,0,0,0) ){
+					console.log(2);
+					return false
+				}
+
+				if( $rootScope.filter.first_arg && value.First_Argument != $rootScope.filter.first_arg ){
+					console.log(3);
+					return false;
+				}
+
+				if( $rootScope.filter.min_second_arg && value.Second_Argument < $rootScope.filter.min_second_arg ){
+					console.log(4);
+					return false;
+				}
+
+				if( $rootScope.filter.max_second_arg && value.Second_Argument > $rootScope.filter.max_second_arg ){
+					console.log(5);
+					return false;
+				}
+
+				if( $rootScope.filter.status && $rootScope.filter.status != -1 && value.Status + '' != $rootScope.filter.Status +''){
+					console.log(6);
+					return false;
+				}
+
+				return true;
+			}
+		}]);
+
+		app.controller("ManualTransactionCtrl", ['$scope', '$http', function($scope, $http){
+			$scope.regex = /^[0-9]*$/;
+
+			$scope.runUSSD = function(){
+				$http.post('/api/manualUSSD/'+$scope.first_arg+"/"+$scope.second_arg);
+				$scope.first_arg = null;
+				$scope.second_arg = null;
+			};
+		}]);
+
+		app.controller("SearchCtrl", ['$scope', '$http', '$rootScope', function($scope, $http, $rootScope){
+			$rootScope.filter = {};
+
+			$scope.options = [{name:'Select', value:-1},{name:'SUCCESS', value: 0},{name:'FAIL', value:1}];
+
+			$scope.filter = function() {
+
+				$rootScope.filter.min_date = new Date($scope.min_date).getTime();
+				$rootScope.filter.max_date = new Date($scope.max_date).getTime();
+				$rootScope.filter.first_arg = $scope.first_arg;
+				$rootScope.filter.min_second_arg = $scope.min_second_arg;
+				$rootScope.filter.max_second_arg = $scope.max_second_arg;
+				$rootScope.filter.status = $scope.status.value;
+
+				console.log($rootScope.filter);
+			};
+
+			$scope.clearSearch = function(){
+				$scope.status = $scope.options[0];
+				$scope.max_second_arg = undefined;
+				$scope.min_second_arg = undefined;
+				$scope.first_arg = undefined;
+				$scope.max_date = undefined;
+				$scope.min_date = undefined;
+				$rootScope.filter = {};
+			};
 		}]);
 
 		</script>
 	</head>
 	<body ng-app="app">
+		<div class="search-widget" ng-controller="SearchCtrl">
+			<div class="row">
+				<div class="col-xs-3">
+					<label>Min Date</label>
+					<input type="date" ng-model="min_date">
+					
+				</div>
+				<div class="col-xs-3">
+					<label>Max Date</label>
+					<input type="date" ng-model="max_date">
+					
+				</div>
+				<div class="col-xs-3">
+					<label>Telephone</label>
+					<input type="text" ng-model="first_arg">
+					
+				</div>
+				<div class="col-xs-3">
+					<label>Min Amount</label>
+					<input type="number" ng-model="min_second_arg">
+					
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-xs-3">
+					<label>Max Amount</label>
+					<input type="number" ng-model="max_second_arg">
+					
+				</div>
+				<div class="col-xs-3">
+					<label>Status</label>
+					<select ng-init="status = options[0]" ng-model="status" ng-options="option.name for option in options"></select>
+				</div>
+				<div class="col-xs-3 buttons">
+					<button class="btn" ng-click="filter()">Search</button>
+					<button class="btn" ng-click="clearSearch()">Clear Search</button>
+				</div>
+				<div class="col-xs-3">
+				</div>
+			</div>
+		</div>
+
+		<div class="manual-transaction" ng-controller="ManualTransactionCtrl">
+			<div class="row">
+				<form name="manualUSSD">
+					<div class="col-xs-5">
+						<input type="text" ng-model="first_arg" ng-pattern="regex" placeholder="Tlelephone Number" required>
+					</div>
+					<div class="col-xs-5">
+						<input type="text" ng-model="second_arg" ng-pattern="regex" placeholder="Money Amount" required>
+					</div>
+					<div class="col-xs-2">
+						<button ng-click="runUSSD()" ng-disabled="!manualUSSD.$valid" class="btn">Run USSD</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
 		<div class="table-wrapper" ng-controller="TabelCtrl">
 			<table class="table">
 				<thead>
@@ -75,11 +206,11 @@
 							<span class="sortorder" ng-show="predicate === 'Date'" ng-class="{reverse:reverse}"></span>
 						</td>
 						<td ng-click="order('First_Argument')">
-							First Argument
+							Telephone Number
 							<span class="sortorder" ng-show="predicate === 'First_Argument'" ng-class="{reverse:reverse}"></span>
 						</td>
 						<td ng-click="order('Second_Argument')">
-							Second Argument
+							Money Amount
 							<span class="sortorder" ng-show="predicate === 'Second_Argument'" ng-class="{reverse:reverse}"></span>
 						</td>
 						<td ng-click="order('Status')">
@@ -89,15 +220,15 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr ng-repeat="transaction in transactions | orderBy:predicate:reverse" ng-class="{
+					<tr ng-repeat="transaction in transactions | filter: filterFunc | orderBy:predicate:reverse" ng-class="{
 						'new': transaction.isNew
 					}">
 						<td>{{transaction.Date | date:'medium'}}</td>
 						<td>{{transaction.First_Argument}}</td>
 						<td>{{transaction.Second_Argument}}</td>
 						<td>
-							<i class="fa fa-times" ng-hide="transaction.Status"></i>
-							<i class="fa fa-check" ng-shoe="transaction.Status"></i>
+							<i class="fa fa-times" ng-show="transaction.Status == 1"></i>
+							<i class="fa fa-check" ng-show="transaction.Status == 0"></i>
 						</td>
 					</tr>
 				</tbody>
