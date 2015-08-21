@@ -1,14 +1,29 @@
-var express = require('express');
-var app =  express();
-
 // HTTP Server
 
-app.get('/', function(req, res){
+var express = require('express');
+var app =  express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 
+app.use(express.static('public'));
+app.use(express.static('node_modules'));
+
+app.get('/', function(req, res){
+	res.sendFile(__dirname + '/index.html');
 });
 
-var HTTPserver = app.listen(3000, function () {
-  console.log('Example app running.');
+app.get('/api/transactions', function(req, res){
+	db.find({}, function(err, doc){
+		res.status(200).send(doc);
+	});
+});
+
+io.on('connection', function(socket){
+  console.log('a user connected');
+});
+
+http.listen(3000, function(){
+  console.log('listening on *:3000');
 });
 
 
@@ -43,6 +58,17 @@ net.createServer(function(socket){
 		child.on('close', function(code) {
 		    socket.write(code+'');
 		    socket.destroy();
+
+		    var transaction = {
+		    	'First_Argument': args[0],
+		    	'Second_Argument': args[1],
+		    	'Date': new Date().getTime(),
+		    	'Status': code + '',
+		    };
+
+		    io.emit('transaction', transaction);
+		    db.insert(transaction);
+
 		});
 
 	});

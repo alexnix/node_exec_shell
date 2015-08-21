@@ -1,0 +1,39 @@
+@-webkit-keyframes pulse {
+  0% {background-color: #F8CA4D;}
+  100% {background-color: white;}
+}
+.sortorder:after {
+	content: '\25b2';
+}
+.sortorder.reverse:after {
+	content: '\25bc';
+}
+i.fa.fa-times {
+	color: red;
+}
+i.fa.fa-check {
+	color: green;
+}
+body {
+	background-color: #efefef;
+}
+div.table-wrapper {
+	background-color: white;
+	padding: 20px;
+	width: 900px;
+	margin: auto;
+	margin-top: 50px;
+}
+
+thead tr td {
+	font-weight: bold;
+	cursor: pointer;
+}
+
+tbody tr:hover {
+	background-color: #dfdfdf;
+}
+
+tr.new {
+	-webkit-animation: pulse 3s;
+}
