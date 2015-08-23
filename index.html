@@ -40,7 +40,9 @@
 		});
 
 		app.controller('TabelCtrl', ['$scope', '$http', 'socket', '$rootScope', function($scope, $http, socket, $rootScope){
-
+			socket.on('counter', function(d){
+				$scope.inQueue = d;
+			});
 			socket.on('transaction', function(d){
 				if ($scope.transactions){
 					d.isNew = true;
@@ -198,6 +200,8 @@
 		</div>
 
 		<div class="table-wrapper" ng-controller="TabelCtrl">
+			<b>Request beeing queued: {{inQueue}}</b>
+			<hr/>
 			<table class="table">
 				<thead>
 					<tr>

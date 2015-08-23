@@ -43,9 +43,10 @@ var queue = [], shellInProgress = false;
 // Checks the queue every 100ms, if it has elements and if another shell si not
 // in execution, get the first element in the queue and process it.
 setInterval(function(){
+	io.emit('counter', queue.length);
 	if(queue.length && !shellInProgress){
 		shellInProgress = true;
-		
+				
 		var connection = queue.shift();
 		var args = connection.data.split(' ');
 		
