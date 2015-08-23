@@ -4,8 +4,8 @@ var app =  express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-app.use(express.static('public'));
-app.use(express.static('node_modules'));
+app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/node_modules'));
 
 app.get('/', function(req, res){
 	res.sendFile(__dirname + '/index.html');
@@ -71,7 +71,7 @@ setInterval(function(){
 
 // Creates a basic datastore
 var Datastore = require('nedb')
-	, db = new Datastore({filename:'database.db', autoload: true})
+	, db = new Datastore({filename:__dirname + '/database.db', autoload: true})
 
 // Creates a TCP server that will accept Socket connections from the 
 // Python script
