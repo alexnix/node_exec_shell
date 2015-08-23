@@ -58,7 +58,7 @@
 				$scope.predicate = predicate;
 			};
 
-			$http.get('/api/transactions').then(function(res){
+			$http.get('/api/transactions/').then(function(res){
 				$scope.transactions = res.data;
 			});
 
@@ -215,7 +215,7 @@
 						</td>
 						<td ng-click="order('Status')">
 							Status
-							<span class="sortorder" ng-show="predicate === 'Stats'" ng-class="{reverse:reverse}"></span>
+							<span class="sortorder" ng-show="predicate === 'Status'" ng-class="{reverse:reverse}"></span>
 						</td>
 					</tr>
 				</thead>
@@ -227,7 +227,7 @@
 						<td>{{transaction.First_Argument}}</td>
 						<td>{{transaction.Second_Argument}}</td>
 						<td>
-							<i class="fa fa-times" ng-show="transaction.Status == 1"></i>
+							<i class="fa fa-times" ng-show="transaction.Status != 0"></i>
 							<i class="fa fa-check" ng-show="transaction.Status == 0"></i>
 						</td>
 					</tr>

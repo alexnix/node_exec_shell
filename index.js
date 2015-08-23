@@ -18,20 +18,11 @@ app.get('/api/transactions', function(req, res){
 });
 
 app.post('/api/manualUSSD/:f/:s', function(req, res){
-	var child = exec("./script.sh " + req.params.f + " " + req.params.s);
-	child.on('close', function(code) {
 
-	    var transaction = {
-	    	'First_Argument': req.params.f,
-	    	'Second_Argument': parseFloat(req.params.s),
-	    	'Date': new Date().getTime(),
-	    	'Status': code + '',
-	    };
-
-	    io.emit('transaction', transaction);
-	    db.insert(transaction);
-
-	});
+	queue.push({data: req.params.f+' '+req.params.s, callback: function(code){
+		res.status(200).send();
+	}})
+	
 });
 
 http.listen(3000, function(){
@@ -48,30 +39,20 @@ var util  = require('util');
 var spwan = require('child_process').spawn;
 var exec = require('child_process').exec;
 
-// Creates a basic datastore
-var Datastore = require('nedb')
-	, db = new Datastore({filename:'database.db', autoload: true})
-
-// Creates a TCP server that will accept Socket connections from the 
-// Python script
-net.createServer(function(socket){ 
-	
-	// Function to execute when python sends data over the socket
-	socket.on('data', function(data){
+var queue = [], shellInProgress = false;
+// Checks the queue every 100ms, if it has elements and if another shell si not
+// in execution, get the first element in the queue and process it.
+setInterval(function(){
+	if(queue.length && !shellInProgress){
+		shellInProgress = true;
 		
-		// Arguments are sent as a single string so I have to process it
-		var args = data.toString('ascii').split(' ');
-
-		// exec("./script.sh " + data.toString('ascii'), function(err, stdout, stderr){
-		// 	socket.write(stdout);
-		// 	socket.destroy();
-		// });
-
-		var child = exec("./script.sh " + data.toString('ascii'));
+		var connection = queue.shift();
+		var args = connection.data.split(' ');
+		
+		var child = exec("./script.sh " + connection.data);
 		child.on('close', function(code) {
-		    socket.write(code+'');
-		    socket.destroy();
-
+			connection.callback(code);
+		    
 		    var transaction = {
 		    	'First_Argument': args[0],
 		    	'Second_Argument': parseFloat(args[1]),
@@ -81,8 +62,27 @@ net.createServer(function(socket){
 
 		    io.emit('transaction', transaction);
 		    db.insert(transaction);
-
+		    shellInProgress = false;
 		});
+
+	}
+}, 100);
+
+// Creates a basic datastore
+var Datastore = require('nedb')
+	, db = new Datastore({filename:'database.db', autoload: true})
+
+// Creates a TCP server that will accept Socket connections from the 
+// Python script
+net.createServer(function(socket){ 
+	
+	// When the socket has data it is added in the queue
+	socket.on('data', function(data){
+		
+		queue.push({data: data.toString('ascii'), callback: function(code){
+			socket.write(code+'');
+		    socket.destroy();
+		}});
 
 	});
 
