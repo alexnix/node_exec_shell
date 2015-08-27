@@ -1,4 +1,7 @@
-// HTTP Server
+/////////////////
+// HTTP Server //
+/////////////////
+
 var express = require('express');
 var app =  express();
 var http = require('http').Server(app);
@@ -30,24 +33,30 @@ http.listen(3000, function(){
 });
 
 
-
-
-// TCP Server
+/*
+* The following code implements a Hole Punching Tehnique.
+* It is basicly a client connectinh to a public server that manages traffic forewarding.
+*/
 
 var net = require('net');
-var util  = require('util');
-var spwan = require('child_process').spawn;
 var exec = require('child_process').exec;
+var client = new net.Socket();
 
+var HP_HOST = "localhost", HP_PORT = 9001;
+var ORIGIN_SERVER_CONNECTION = "this_is_ussd_server_connecting", ORIGIN_SERVER_RESPONSE = "this_is_ussd_server_respons";
+
+
+var Datastore = require('nedb')
+	, db = new Datastore({filename:__dirname + '/database.db', autoload: true});
+
+// Queue Processing
 var queue = [], shellInProgress = false;
-// Checks the queue every 100ms, if it has elements and if another shell si not
-// in execution, get the first element in the queue and process it.
 setInterval(function(){
 	io.emit('counter', queue.length);
 	if(queue.length && !shellInProgress){
 		shellInProgress = true;
-				
 		var connection = queue.shift();
+
 		var args = connection.data.split(' ');
 		
 		var child = exec("./script.sh " + connection.data);
@@ -69,22 +78,29 @@ setInterval(function(){
 	}
 }, 100);
 
-// Creates a basic datastore
-var Datastore = require('nedb')
-	, db = new Datastore({filename:__dirname + '/database.db', autoload: true})
 
-// Creates a TCP server that will accept Socket connections from the 
-// Python script
-net.createServer(function(socket){ 
+// Connects to Hole Punching Server
+client.connect(HP_PORT, HP_HOST, function(){
+	var hp_server_handshake = {
+		origin: ORIGIN_SERVER_CONNECTION,
+	};
+	client.write( JSON.stringify(hp_server_handshake) );
+});
+
+// Processes data from the Hole Punching Server
+client.on('data', function(data){
+	var json_data = JSON.parse(data);
 	
-	// When the socket has data it is added in the queue
-	socket.on('data', function(data){
-		
-		queue.push({data: data.toString('ascii'), callback: function(code){
-			socket.write(code+'');
-		    socket.destroy();
-		}});
-
+	queue.push({
+		data: json_data.phone + " " + json_data.amount,
+		callback: function(code){
+			var hp_server_response = {
+				origin: ORIGIN_SERVER_RESPONSE,
+				response: code,
+				shortid: json_data.shortid,
+			};
+			client.write( JSON.stringify(hp_server_response) );
+		},
 	});
 
-}).listen(9000, "localhost");
+});
