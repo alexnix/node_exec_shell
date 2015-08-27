@@ -42,7 +42,7 @@ var net = require('net');
 var exec = require('child_process').exec;
 var client = new net.Socket();
 
-var HP_HOST = "localhost", HP_PORT = 9001;
+var HP_HOST = "188.25.163.184", HP_PORT = 9001;
 var ORIGIN_SERVER_CONNECTION = "this_is_ussd_server_connecting", ORIGIN_SERVER_RESPONSE = "this_is_ussd_server_respons";
 
 
