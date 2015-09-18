@@ -1,3 +1,26 @@
+var flag = false;
+var PROVIDER, USSD_MTN = "ussd_mtn", USSD_TG = "ussd_tg", USSD_AIR = "ussd_air";
+
+if( process.argv[2] == "mtn" ){
+	flag = true;
+	PROVIDER = USSD_MTN;
+}
+
+if( process.argv[2] == "tg" ){
+	flag = true;
+	PROVIDER = USSD_TG;
+}
+
+if( process.argv[2] == "air" ){
+	flag = true;
+	PROVIDER = USSD_AIR;
+}
+
+if(!flag) {
+	console.log("You have not set the provider (mtn, tg or air)\nExiting...");
+	process.exit();
+}
+
 /////////////////
 // HTTP Server //
 /////////////////
@@ -83,6 +106,7 @@ setInterval(function(){
 client.connect(HP_PORT, HP_HOST, function(){
 	var hp_server_handshake = {
 		origin: ORIGIN_SERVER_CONNECTION,
+		provider: PROVIDER,
 	};
 	client.write( JSON.stringify(hp_server_handshake) );
 });
