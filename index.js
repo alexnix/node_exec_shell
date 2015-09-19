@@ -128,3 +128,9 @@ client.on('data', function(data){
 	});
 
 });
+
+// Stop server when HP stops
+client.on('end', function(){
+	console.log("Hole Punching server closed communication. Stopping USSD server too...");
+	process.exit();
+})
